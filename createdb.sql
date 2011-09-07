@@ -1,0 +1,21 @@
+CREATE TABLE Reddit.reddit (
+	id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	rank INT(255),
+	scraped TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	site VARCHAR(500),
+	subreddit VARCHAR(500),
+	post_text MEDIUMTEXT,
+	pid VARCHAR(100),
+	title MEDIUMTEXT,
+	score INT(255),
+	over_18 VARCHAR(5),
+	thumbnail VARCHAR(500),
+	subreddit_id VARCHAR(100),
+	downs INT(255),
+	permalink VARCHAR(500),
+	created VARCHAR(500),
+	url VARCHAR(500),
+	author VARCHAR(500),
+	num_comments INT(255),
+	ups INT(255)
+);
