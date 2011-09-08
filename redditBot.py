@@ -7,6 +7,7 @@ parses data and puts into a mysql table
 
 import simplejson, urllib
 import datetime
+import time
 import MySQLdb
 import sys
 
@@ -32,30 +33,33 @@ class RedditBot:
 		for i,item in enumerate(datalist):
 			f.write(str(item))
 			item = item['data']
+			print item
 			rank = page*25+(i+1)
 			domain = str(MySQLdb.escape_string(item['domain']))
-			subreddit = str(MySQLdb.escape_string(item['subreddit']))
-			post_text = str(MySQLdb.escape_string(item['selftext'].replace(u'\u2019', "").replace(u'\u2018', "")))
+			subreddit = MySQLdb.escape_string(item['subreddit'])
+			post_text = MySQLdb.escape_string(item['selftext'].encode('utf8'))
 			pid = str(item['id'])
-			title = str(MySQLdb.escape_string(item['title'].replace(u'\u2019', "").replace(u'\u2018', "")))
+			title = str(MySQLdb.escape_string(item['title'].encode('utf8')))
 			score = int(item['score'])
 			over_18 = str(item['over_18'])
 			thumbnail = str(MySQLdb.escape_string(item['thumbnail'])) 
 			subreddit_id = str(MySQLdb.escape_string(item['subreddit_id']))
 			downs = int(item['downs'])
-			permalink = str(MySQLdb.escape_string(item['permalink']))
+			permalink = MySQLdb.escape_string(item['permalink'].encode('utf8'))
 			created = str(item['created_utc'])
-			url = str(MySQLdb.escape_string(item['url']))
-			author = str(MySQLdb.escape_string(item['author']))
+			url = MySQLdb.escape_string(item['url'].encode('utf8'))
+			author = MySQLdb.escape_string(item['author'].encode('utf8'))
 			num_comments = int(item['num_comments'])
 			ups = int(item['ups'])
 			fields = (rank, domain, subreddit, post_text, pid, title, score, over_18, thumbnail, subreddit_id, downs, permalink, created, url, author, num_comments, ups)
 			sql = """INSERT INTO Reddit.reddit(rank, site, subreddit, post_text, pid, title, score, over_18, thumbnail, subreddit_id, downs,permalink, created, url, author, num_comments, ups)  VALUES ("%s",  "%s", "%s", "%s", "%s", "%s" , "%s" , "%s" , "%s" , "%s" , "%s" , "%s" , "%s" , "%s" , "%s" , "%s", "%s");""" %fields
 			cursor.execute(sql)
-			
+		
+		print "Inserted ranks ", page*25, " to ", (page+1)*25, " at ", time.ctime()
 		return data['after']
 		
 	def scrape(self, pages):
+		print "Starting scrape at ", time.ctime()
 		after = ''
 		for i in range(0, pages):
 			if after == '':
