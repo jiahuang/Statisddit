@@ -33,17 +33,16 @@ class RedditBot:
 		for i,item in enumerate(datalist):
 			f.write(str(item))
 			item = item['data']
-			print item
 			rank = page*25+(i+1)
-			domain = str(MySQLdb.escape_string(item['domain']))
+			domain = MySQLdb.escape_string(item['domain'].encode('utf8'))
 			subreddit = MySQLdb.escape_string(item['subreddit'])
 			post_text = MySQLdb.escape_string(item['selftext'].encode('utf8'))
 			pid = str(item['id'])
-			title = str(MySQLdb.escape_string(item['title'].encode('utf8')))
+			title = MySQLdb.escape_string(item['title'].encode('utf8'))
 			score = int(item['score'])
 			over_18 = str(item['over_18'])
-			thumbnail = str(MySQLdb.escape_string(item['thumbnail'])) 
-			subreddit_id = str(MySQLdb.escape_string(item['subreddit_id']))
+			thumbnail = MySQLdb.escape_string(item['thumbnail'].encode('utf8')))
+			subreddit_id = MySQLdb.escape_string(item['subreddit_id'])
 			downs = int(item['downs'])
 			permalink = MySQLdb.escape_string(item['permalink'].encode('utf8'))
 			created = str(item['created_utc'])
