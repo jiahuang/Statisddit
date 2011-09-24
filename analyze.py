@@ -12,6 +12,27 @@ class Analyze:
 		self.email = ''
 		self.dbHelper = DbHelper(portNum, uname, pw, dbname)
 	
+	def numOfRecords(self):
+		''' map datetimes to number of records collected over 1808*10 min'''
+		start = datetime.datetime(2011, 9, 7, 20, 30) #2011, 9, 7, 15, 28 #
+		end = datetime.datetime(2011, 9, 20, 9, 50) #2011, 9, 7, 20, 18 #
+		change = datetime.timedelta(minutes=10)
+		tempChange = datetime.timedelta(minutes=1)
+
+		timeDict = {}
+		while start <= end:
+			tempEnd = start + tempChange
+			sql = "Select count(*) from Reddit.reddit WHERE scraped BETWEEN '"+str(start)+"' AND '"+str(tempEnd)+"'"
+			res = self.dbHelper.customQuery(sql)
+			timeDict[start] = res[0][0]
+			start += change
+		
+		# check which one didnt make 200 records
+		for key in timeDict:
+			if timeDict[key] != 200:
+				print key, timeDict[key]
+		
+	
 	def lengthOfStay(self):
 		''' length that posts stay on front page (r1 to r25)'''
 		posts = self.dbHelper.getRankInclusive(1, 25)
@@ -54,8 +75,9 @@ class Analyze:
 
 def main(name, port=3306, user='root', pw='admin', db='Reddit', pages=8):
 	analyzer = Analyze(port, user, pw, db)
-	print analyzer.lengthOfStay()
-	print analyzer.postTime()
+	#print analyzer.lengthOfStay()
+	#print analyzer.postTime()
+	print analyzer.numOfRecords()
 	#print analyzer.pathOfPosts()
 
 if __name__ == '__main__':
