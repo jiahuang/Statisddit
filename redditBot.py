@@ -41,7 +41,7 @@ class RedditBot:
 			title = MySQLdb.escape_string(item['title'].encode('utf8'))
 			score = int(item['score'])
 			over_18 = str(item['over_18'])
-			thumbnail = MySQLdb.escape_string(item['thumbnail'].encode('utf8')))
+			thumbnail = MySQLdb.escape_string(item['thumbnail'].encode('utf8'))
 			subreddit_id = MySQLdb.escape_string(item['subreddit_id'])
 			downs = int(item['downs'])
 			permalink = MySQLdb.escape_string(item['permalink'].encode('utf8'))

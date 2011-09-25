@@ -13,25 +13,39 @@ class Analyze:
 		self.dbHelper = DbHelper(portNum, uname, pw, dbname)
 	
 	def numOfRecords(self):
-		''' map datetimes to number of records collected over 1808*10 min'''
+		''' map datetimes to number of records collected over start and end dates'''
+		''' results: missing the following records
+			2011-09-19 09:30:00 125
+			2011-09-15 20:50:00 100
+			2011-09-15 16:50:00 50
+		'''
 		start = datetime.datetime(2011, 9, 7, 20, 30) #2011, 9, 7, 15, 28 #
 		end = datetime.datetime(2011, 9, 20, 9, 50) #2011, 9, 7, 20, 18 #
 		change = datetime.timedelta(minutes=10)
-		tempChange = datetime.timedelta(minutes=1)
+		tempChange = datetime.timedelta(minutes=5)
 
 		timeDict = {}
+		records = 0
 		while start <= end:
-			tempEnd = start + tempChange
-			sql = "Select count(*) from Reddit.reddit WHERE scraped BETWEEN '"+str(start)+"' AND '"+str(tempEnd)+"'"
-			res = self.dbHelper.customQuery(sql)
-			timeDict[start] = res[0][0]
-			start += change
-		
-		# check which one didnt make 200 records
+				tempEnd = start + tempChange
+				sql = "Select count(*) from Reddit.reddit WHERE scraped BETWEEN '"+str(start)+"' AND '"+str(tempEnd)+"';"
+				res = self.dbHelper.customQuery(sql)
+				timeDict[start] = res[0][0]
+				records += timeDict[start]
+				print start, timeDict[start], records
+				start += change
+
+		# check which ones didnt make 200 records
+		print "res:"
+		total = 0
+		totalMissing = 0
 		for key in timeDict:
-			if timeDict[key] != 200:
-				print key, timeDict[key]
-		
+				total += 200
+				if timeDict[key] != 200:
+						totalMissing += 200 - timeDict[key]
+						print key, timeDict[key]
+		print total, totalMissing, total-totalMissing
+
 	
 	def lengthOfStay(self):
 		''' length that posts stay on front page (r1 to r25)'''
@@ -73,7 +87,7 @@ class Analyze:
 		''' trend in ranks that posts follow from r200 to r25-'''
 	"""	
 
-def main(name, port=3306, user='root', pw='admin', db='Reddit', pages=8):
+def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	analyzer = Analyze(port, user, pw, db)
 	#print analyzer.lengthOfStay()
 	#print analyzer.postTime()

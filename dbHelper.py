@@ -20,9 +20,16 @@ class DbHelper:
 		return self.cursor.fetchall()
 		
 	def getRankInclusive(self, start, end):
-		''' returns all rows (w/ unique url) between start and end '''
+		''' returns all rows (w/ unique post ids) between start and end ranks'''
 		fields = (start, end)
 		sql = """ SELECT DISTINCT pid, id FROM Reddit.reddit WHERE rank>=%s AND rank <=%s;"""%fields
+		self.cursor.execute(sql)
+		return self.cursor.fetchall()
+
+	def getTimeInclusive(self, start, end):
+		''' returns all rows (w/ unique post ids) between start and end times'''
+		fields = (str(start), str(end))
+		sql = """Select DISTINCT pid, url from Reddit.reddit WHERE scraped BETWEEN '%s' AND '%s';"""%fields
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
 
@@ -32,7 +39,7 @@ class DbHelper:
 		sql = """ SELECT %s FROM Reddit.reddit WHERE %s='%s'"""%fields 
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
-
+	
 	def customQuery(self, sql):
 		self.cursor.execute(sql)
-		return self.cursor.fetchall()
+		return self.cursor.fetchall(), self.cursor.rowcount
