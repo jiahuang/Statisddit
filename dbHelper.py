@@ -13,6 +13,12 @@ class DbHelper:
 		self.db = MySQLdb.connect(host="localhost", port=portNum, user=uname, passwd=pw, db=dbname)
 		self.cursor = self.db.cursor()
 
+	def getAllPosts(self):
+		''' returns all unique posts'''
+		sql = """ SELECT DISTINCT pid, id FROM Reddit.reddit;"""
+		self.cursor.execute(sql)
+		return self.cursor.fetchall()
+		
 	def getRank(self, rank):
 		''' returns all rows with rank '''
 		sql = """ SELECT * FROM Reddit.reddit WHERE rank=%s;"""%rank
@@ -25,7 +31,14 @@ class DbHelper:
 		sql = """ SELECT DISTINCT pid, id FROM Reddit.reddit WHERE rank>=%s AND rank <=%s;"""%fields
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
-
+		
+	def getRankExclusive(self, rank):
+		''' returns all wors (w/ unique post ids) that never reach rank'''
+		fields = (rank, rank)
+		sql = """ SELECT DISTINCT pid, id FROM Reddit.reddit WHERE rank>%s AND pid NOT IN (SELECT DISTINCT pid FROM Reddit.reddit WHERE rank<=%s)"""%fields
+		self.cursor.execute(sql)
+		return self.cursor.fetchall()
+		
 	def getTimeInclusive(self, start, end):
 		''' returns all rows (w/ unique post ids) between start and end times'''
 		fields = (str(start), str(end))
@@ -37,6 +50,12 @@ class DbHelper:
 		''' returns column in row if field matches value '''
 		fields = (column, field, value)
 		sql = """ SELECT %s FROM Reddit.reddit WHERE %s='%s'"""%fields 
+		self.cursor.execute(sql)
+		return self.cursor.fetchall()
+	
+	def getPath(self, pid):
+		''' returns list of ranks ordered by ascending scraped date taken by a post over its lifespan'''
+		sql = """Select rank, scraped, ups, downs, score, num_comments, created from Reddit.reddit where pid='%s' ORDER BY scraped ASC"""%pid
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
 	

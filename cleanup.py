@@ -17,11 +17,11 @@ class Cleanup:
 		1. already on the front page when bot started
 		2. was still on the front page when bot ended
 		'''
-		tempChange = datetime.timedelta(minutes=20)
+		tempChange = datetime.timedelta(minutes=5)
 		
 		# find rows that were on the front page during this time
 		res = self.dbHelper.getTimeInclusive(time, time + tempChange)
-		print "Number of rows to be affected by cleanup: ", len(res)
+		print "Number of pids to be affected by cleanup: ", len(res)
 		for item in res:
 			pid = item[0]
 			#print self.dbHelper.getField('*', 'pid', pid)
