@@ -94,13 +94,15 @@ class Analyze:
 	
 	def postTime(self, cutoffRank, beforeRank=True):
 		''' time posted vs number of posts eventually reaching cutoff rank'''
-		if beforeRank:
-			posts = self.dbHelper.getRankInclusive(1, cutoffRank)
-		else:
-			posts = self.dbHelper.getRankExclusive(cutoffRank)
+		posts = self.dbHelper.getRankInclusive(1, cutoffRank)
+		
+		if not beforeRank:
+			pids = ",".join(["'"+post[0]+"'" for post in posts])
+			sql = "SELECT DISTINCT pid, id FROM Reddit.reddit WHERE rank>"+str(cutoffRank)+" AND pid NOT IN ("+pids+")"
+			posts = self.dbHelper.customQuery(sql)
 		
 		postDict = {}
-		for post in posts:
+		for post in posts[0]:
 			# get time post was created
 			created = self.dbHelper.getField('created', 'pid', post[0])
 			created = int(round(float(created[0][0])))
@@ -134,12 +136,12 @@ class Analyze:
 		
 def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	analyzer = Analyze(port, user, pw, db)
-	print analyzer.lengthOfStay()
-	print analyzer.timeToReachFront()
-	print analyzer.numOfRecords()
-	print analyzer.postTime(25)
+	#print analyzer.lengthOfStay()
+	#print analyzer.timeToReachFront()
+	#print analyzer.numOfRecords()
+	#print analyzer.postTime(25)
 	print analyzer.postTime(25, False)
-	print analyzer.peakRank()
+	#print analyzer.peakRank()
 	
 if __name__ == '__main__':
     main(*sys.argv)
