@@ -15,7 +15,7 @@ class DbHelper:
 
 	def getAllPosts(self):
 		''' returns all unique posts'''
-		sql = """ SELECT DISTINCT pid, id FROM Reddit.reddit;"""
+		sql = """ SELECT DISTINCT pid FROM Reddit.reddit;"""
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
 		
