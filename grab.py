@@ -126,6 +126,7 @@ class Grab:
 			sql = """SELECT score, scraped FROM Reddit.reddit WHERE pid='%s' ORDER BY scraped ASC;;"""%fields
 			res = self.dbHelper.customQuery(sql)
 			createdDate = datetime.datetime.utcfromtimestamp(float(post[1]))
+			print post[0], post[1], createdDate
 			# map it to time since creation
 			score = 0
 			for r in res:
@@ -141,6 +142,13 @@ class Grab:
 					scoreDict[diff] = (score, 1)
 		self.writeRes(f, scoreDict)
 		return scoreDict
+		
+	def subreddit(self, posts, f):
+		subredditDict = {}
+		for post in posts:
+			subredditDict[post[2]] = 1 if post[2] not in subredditDict else subredditDict[post[2]] + 1
+		self.writeRes(f, subredditDict)
+		return subredditDict
 	
 def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	grab = Grab(port, user, pw, db)
@@ -150,14 +158,16 @@ def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	#print grab.postTime(25, False)
 	#
 	#print grab.repost()
-	posts = self.dbHelper.getRankInclusive(1, 25)
-	print grab.peakRank(posts, 'peakRank_25.res')
-	print grab.score(posts, 'score_25.res')
+	posts = grab.dbHelper.getRankInclusive(1, 25)
+	#print grab.peakRank(posts, 'peakRank_25.res')
+	#print grab.score(posts, 'score_25.res')
+	print grab.subreddit(psots, 'subreddit_25.res')
 	pids = ",".join(["'"+post[0]+"'" for post in posts])
-	sql = "SELECT pid,created FROM Reddit.reddit WHERE rank>"+str(cutoffRank)+" AND pid NOT IN ("+pids+") GROUP BY pid"
-	posts = self.dbHelper.customQuery(sql)
-	print grab.score(posts, 'score_200.res')
-	print grab.peakRank(posts, 'peakRank_200.res')
+	sql = "SELECT pid,created FROM Reddit.reddit WHERE rank>"+str(25)+" AND pid NOT IN ("+pids+") GROUP BY pid"
+	posts = grab.dbHelper.customQuery(sql)
+	#print grab.score(posts, 'score_200.res')
+	#print grab.peakRank(posts, 'peakRank_200.res')
+	print grab.subreddit(psots, 'subreddit_200.res')
 	
 if __name__ == '__main__':
     main(*sys.argv)

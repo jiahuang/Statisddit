@@ -11,6 +11,7 @@ import pylab
 #import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from pylab import plot
+import math
 
 class Analyze:
 	def openFile(self, f):
@@ -115,14 +116,22 @@ class Analyze:
 		pylab.xlabel('Hour of Day Posted')
 		pylab.savefig('postTimeDivided.png')
 	
-	def peakRank(self, f='peakRank_25.res'):
+	def peakRank(self, f1='peakRank_25.res', f2='peakRank_200.res'):
 		# generate cdf of number of posts reached max vs posting time
-		data = self.openFile(f)
-		cdf = Cdf.MakeCdfFromDict(data)
+		data1 = self.openFile(f1)
+		data2 = self.openFile(f2)
+		cdf1 = Cdf.MakeCdfFromDict(data1)
+		cdf2 = Cdf.MakeCdfFromDict(data2)
 		pylab.cla()
-		plot(cdf.xs,cdf.ps)
 		pylab.xlim([0,1200])
-		pylab.savefig('peakRank_25.png')
+		p1 = plot(cdf1.xs,cdf1.ps)
+		p2 = plot(cdf2.xs,cdf2.ps)
+		pylab.ylabel('CDF')
+		fontP = FontProperties()
+		fontP.set_size('small')
+		pylab.legend((p1[0], p2[0]), ('Top 25', 'Top 26-200'), prop = fontP)
+		pylab.xlabel('Time Since Posting (min)')
+		pylab.savefig('peakRank.png')
 	
 	# of the 5923 posts we grabbed, only 15 were reposts
 	def repost(self, fFirst='firstPosts.res', fOther='repeatPosts.res'):
@@ -131,12 +140,52 @@ class Analyze:
 		pylab.cla()
 		# plot paths that posts went through
 
+	def score(self, f1='score_25.res', f2="score_200.res"):
+		# generate histogram of avg score
+		data1 = self.openFile(f1)
+		data2 = self.openFile(f2)
+		cleanData1 = {}
+		cleanData2 = {}
+		for key in data1:
+			cleanData1[key] = math.log10(float(data1[key][0])/float(data1[key][1]))
+		for key in data2:
+			cleanData2[key] = math.log10(float(data2[key][0])/float(data2[key][1]))
+			
+		# generate pmfs
+		pylab.cla()
+		hist1 = Pmf.MakeHistFromDict(cleanData1)
+		hist2 = Pmf.MakeHistFromDict(cleanData2)
+		xs1, fs1 = hist1.Render()
+		xs2, fs2 = hist2.Render()
+		pylab.xlim([0,1460])
+		bar= pylab.bar(xs1, fs1, width=0.8, facecolor='blue')
+		pylab.savefig('score_25.png')
+		pylab.cla()
+		pylab.xlim([0,1460])
+		bar= pylab.bar(xs2, fs2, width=0.8, facecolor='red')
+		pylab.savefig('score_200.png')
+		
+		# generate cdf
+		pylab.cla()
+		cdf1 = Cdf.MakeCdfFromDict(cleanData1)
+		cdf2 = Cdf.MakeCdfFromDict(cleanData2)
+		fontP = FontProperties()
+		fontP.set_size('small')
+		p1 = plot(cdf1.xs,cdf1.ps)
+		p2 = plot(cdf2.xs,cdf2.ps)
+		pylab.xlim([0,1460])
+		pylab.ylabel('CDF')
+		pylab.xlabel('Time Since Posting (min)')
+		pylab.legend((p1[0], p2[0]), ('Top 25', 'Top 26-200'), prop = fontP)
+		pylab.savefig('score.png')
+		
 def main(name):
 	analyze = Analyze()
 	#analyze.lengthOfStay()
 	#analyze.timeToReachFront()
 	#analyze.postTime()
 	analyze.peakRank()
+	#analyze.score()
 	
 if __name__ == '__main__':
 	main(*sys.argv)
