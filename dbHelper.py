@@ -28,14 +28,14 @@ class DbHelper:
 	def getRankInclusive(self, start, end):
 		''' returns all rows (w/ unique post ids) between start and end ranks'''
 		fields = (start, end)
-		sql = """ SELECT pid, created FROM Reddit.reddit WHERE rank>=%s AND rank <=%s GROUP BY pid;"""%fields
+		sql = """ SELECT pid, created FROM Reddit.reddit WHERE rank <=%s GROUP BY pid;"""%fields
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
 		
 	def getRankExclusive(self, rank):
 		''' returns all wors (w/ unique post ids) that never reach rank'''
 		fields = (rank, rank)
-		sql = """ SELECT DISTINCT pid FROM Reddit.reddit WHERE rank>%s AND pid NOT IN (SELECT DISTINCT pid FROM Reddit.reddit WHERE rank<=%s)"""%fields
+		sql = """ SELECT DISTINCT pid, created FROM Reddit.reddit WHERE rank>%s AND pid NOT IN (SELECT DISTINCT pid FROM Reddit.reddit WHERE rank<=%s)"""%fields
 		self.cursor.execute(sql)
 		return self.cursor.fetchall()
 		
