@@ -52,24 +52,21 @@ class Grab:
 		self.writeRes('timeToReachFront.res', lengthDict)
 		return lengthDict
 	
-	def postTime(self, cutoffRank, beforeRank=True):
+	def postTime(self, posts, f):
 		''' time posted vs number of posts eventually reaching cutoff rank'''
-		posts = self.dbHelper.getRankInclusive(1, cutoffRank)
-		
-		if not beforeRank:
-			pids = ",".join(["'"+post[0]+"'" for post in posts])
-			sql = "SELECT pid,created FROM Reddit.reddit WHERE rank>"+str(cutoffRank)+" AND pid NOT IN ("+pids+") GROUP BY pid"
-			posts = self.dbHelper.customQuery(sql)
-		
 		postDict = {}
 		for post in posts:
 			# get time post was created
 			created = int(round(float(post[1])))
-			createdDate = time.gmtime(created).tm_hour
+			createdHour = time.gmtime(created).tm_hour
+			createdDate = time.gmtime(created).tm_yday
 			# increment count
-			postDict[createdDate] = 1 if createdDate not in postDict else postDict[createdDate] + 1
+			if createdDate in postDict:
+				postDict[createdDate][createdHour] = 1 if createdHour not in postDict[createdDate] else postDict[createdDate][createdHour]+1
+			else:
+				postDict[createdDate] = {createdHour:1}
 		
-		self.writeRes('postTime.res', postDict)
+		self.writeRes(f, postDict)
 		return postDict
 
 	def peakRank(self, posts, f):
@@ -118,12 +115,12 @@ class Grab:
 		self.writeRes('repeatPosts.res', repeatPosts)
 		return firstPosts, repeatPosts
 	
-	def score(self, posts, f, scoreType="score", byRank=False, overallScore=True):
+	def score(self, posts, f, byRank=False, overallScore=True, upsOnly=False, downsOnly=False):
 		''' score since time posting'''
 		scoreDict = {}
 		for post in posts:
 			fields = (post[0])
-			sql = """SELECT scraped, created, """+scoreType+""", rank FROM Reddit.reddit WHERE pid='%s' ORDER BY scraped ASC;"""%fields
+			sql = """SELECT scraped, created, score, ups, downs, rank FROM Reddit.reddit WHERE pid='%s' ORDER BY scraped ASC;"""%fields
 			res = self.dbHelper.customQuery(sql)
 			createdDate = datetime.datetime.utcfromtimestamp(float(post[1]))
 			print post[0], post[1], createdDate
@@ -137,11 +134,11 @@ class Grab:
 				scraped = scraped + datetime.timedelta(hours=4)
 				diff = (scraped - createdDate).seconds/(60)
 				if byRank: 
-					rank = r[4]
-					ups = r[2] - oldUps
-					oldUps = r[2]
-					downs = r[3] - oldDowns
-					oldDowns = r[3]
+					rank = r[5]
+					ups = r[3] - oldUps
+					oldUps = r[3]
+					downs = r[4] - oldDowns
+					oldDowns = r[4]
 					if rank in scoreDict:
 						upsList =  scoreDict[rank][0]
 						upsList.append(ups)
@@ -157,7 +154,11 @@ class Grab:
 						score = r[2] - oldScore
 						oldScore = r[2]
 					else:
-						score = r[2] 
+						score = r[2]
+					if upsOnly:
+						score = r[3]
+					if downsOnly:
+						score = r[4] 
 					if diff in scoreDict:
 						prev = scoreDict[diff]
 						scoreDict[diff] = (prev[0]+score, prev[1]+1)
@@ -177,30 +178,31 @@ def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	grab = Grab(port, user, pw, db)
 	#print grab.lengthOfStay()
 	#print grab.timeToReachFront()
-	#print grab.postTime(25)
 	#print grab.postTime(25, False)
 	#print grab.repost()
 	posts = grab.dbHelper.getRankInclusive(25)
+	print grab.postTime(posts, 'post_time_25.res')
 	print grab.score(posts, 'score_total_25.res')
-	print grab.score(posts, 'score_change_25.res', "score", False, False)
-	print grab.score(posts, 'upvotes_25.res', "ups")
-	print grab.score(posts, 'downvotes_25.res', "downs")
+	print grab.score(posts, 'score_change_25.res', False, False)
+	print grab.score(posts, 'upvotes_25.res', False, False, True)
+	print grab.score(posts, 'downvotes_25.res', False, False, False, True)
 	#print grab.peakRank(posts, 'peakRank_25.res')
 	#print grab.score(posts, 'score_25.res')
 	#print grab.subreddit(posts, 'subreddit_25.res')
 	pids = ",".join(["'"+post[0]+"'" for post in posts])
 	sql = "SELECT pid,created, subreddit FROM Reddit.reddit WHERE rank>"+str(25)+" AND pid NOT IN ("+pids+") GROUP BY pid"
 	posts = grab.dbHelper.customQuery(sql)
+	print grab.postTime(posts, 'post_time_200.res')
 	print grab.score(posts, 'score_total_200.res')
-	print grab.score(posts, 'score_change_200.res', "score", False, False)
-	print grab.score(posts, 'upvotes_200.res', "ups")
-	print grab.score(posts, 'downvotes_200.res', "downs")
+	print grab.score(posts, 'score_change_200.res', False, False)
+	print grab.score(posts, 'upvotes_200.res', False, False, True)
+	print grab.score(posts, 'downvotes_200.res', False, False, False, True)
 	#print grab.score(posts, 'score_200.res')
 	#print grab.peakRank(posts, 'peakRank_200.res')
 	#print grab.subreddit(posts, 'subreddit_200.res')
 	
 	posts = grab.dbHelper.getRankInclusive(200)
-	print grab.score(posts, 'changed_all.res', "ups, downs", True)
+	print grab.score(posts, 'changed_all.res', True)
 	
 	
 if __name__ == '__main__':
