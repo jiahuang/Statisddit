@@ -69,20 +69,20 @@ class Grab:
 		self.writeRes(f, postDict)
 		return postDict
 
-	def peakRank(self, posts, f):
+	def peak(self, posts, f, peakType="Rank"):
 		''' number of posts that have reached max rank vs posting time'''
 		peakDict = {}
 		for post in posts:
 			# figure out max rank
-			fields = (post[0])
-			sql = """ SELECT created, scraped FROM Reddit.reddit WHERE pid='%s' ORDER BY rank, scraped ASC LIMIT 1"""%fields 
+			fields = (post[0], peakType)
+			sql = """ SELECT created, scraped FROM Reddit.reddit WHERE pid='%s' ORDER BY %s, scraped ASC LIMIT 1"""%fields 
 			res = self.dbHelper.customQuery(sql)
 			# figure out time diff between created and scraped
 			scraped = res[0][1]
 			createdDate = datetime.datetime.utcfromtimestamp(float(res[0][0]))
 			# add 4 hours because I messed up on writing to the db with gm time
 			scraped = scraped + datetime.timedelta(hours=4)
-			diff = (scraped - createdDate).seconds/(60)
+			diff = (scraped-createdDate).days*1440 + (scraped - createdDate).seconds/(60)
 			peakDict[diff] = 1 if diff not in peakDict else peakDict[diff] + 1
 		
 		self.writeRes(f, peakDict)
@@ -132,7 +132,7 @@ class Grab:
 				scraped = r[0]
 				# add 4 hours because I messed up on writing to the db with gm time
 				scraped = scraped + datetime.timedelta(hours=4)
-				diff = (scraped - createdDate).seconds/(60)
+				diff = (scraped-createdDate).days*1440 + (scraped - createdDate).seconds/(60)
 				if byRank: 
 					rank = r[5]
 					ups = r[3] - oldUps
@@ -181,28 +181,28 @@ def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	#print grab.postTime(25, False)
 	#print grab.repost()
 	posts = grab.dbHelper.getRankInclusive(25)
-	print grab.postTime(posts, 'post_time_25.res')
-	print grab.score(posts, 'score_total_25.res')
-	print grab.score(posts, 'score_change_25.res', False, False)
-	print grab.score(posts, 'upvotes_25.res', False, False, True)
-	print grab.score(posts, 'downvotes_25.res', False, False, False, True)
-	#print grab.peakRank(posts, 'peakRank_25.res')
+	#print grab.postTime(posts, 'post_time_25.res')
+	#print grab.score(posts, 'score_total_25.res')
+	#print grab.score(posts, 'score_change_25.res', False, False)
+	#print grab.score(posts, 'upvotes_25.res', False, False, True)
+	#print grab.score(posts, 'downvotes_25.res', False, False, False, True)
+	print grab.peak(posts, 'peakScore_25.res', 'score')
 	#print grab.score(posts, 'score_25.res')
 	#print grab.subreddit(posts, 'subreddit_25.res')
 	pids = ",".join(["'"+post[0]+"'" for post in posts])
 	sql = "SELECT pid,created, subreddit FROM Reddit.reddit WHERE rank>"+str(25)+" AND pid NOT IN ("+pids+") GROUP BY pid"
 	posts = grab.dbHelper.customQuery(sql)
-	print grab.postTime(posts, 'post_time_200.res')
-	print grab.score(posts, 'score_total_200.res')
-	print grab.score(posts, 'score_change_200.res', False, False)
-	print grab.score(posts, 'upvotes_200.res', False, False, True)
-	print grab.score(posts, 'downvotes_200.res', False, False, False, True)
+	#print grab.postTime(posts, 'post_time_200.res')
+	#print grab.score(posts, 'score_total_200.res')
+	#print grab.score(posts, 'score_change_200.res', False, False)
+	#print grab.score(posts, 'upvotes_200.res', False, False, True)
+	#print grab.score(posts, 'downvotes_200.res', False, False, False, True)
 	#print grab.score(posts, 'score_200.res')
-	#print grab.peakRank(posts, 'peakRank_200.res')
+	print grab.peak(posts, 'peakScore_25.res', 'score')
 	#print grab.subreddit(posts, 'subreddit_200.res')
 	
-	posts = grab.dbHelper.getRankInclusive(200)
-	print grab.score(posts, 'changed_all.res', True)
+	#posts = grab.dbHelper.getRankInclusive(200)
+	#print grab.score(posts, 'changed_all.res', True)
 	
 	
 if __name__ == '__main__':
