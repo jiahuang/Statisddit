@@ -14,6 +14,54 @@ from pylab import plot
 import math
 from graph import *
 
+def pearsonCorrelation(x, y):
+	pmfX = Pmf.MakePmfFromList(x)
+	pmfY = Pmf.MakePmfFromList(y)
+	p = []
+	meanX = pmfX.Mean()
+	stdX = pmfX.Var()**(1.0/2.0)
+	meanY = pmfY.Mean()
+	stdY = pmfY.Var()**(1.0/2.0)
+	
+	for i in range(len(x)):
+		p.append(((x[i] - meanX)/stdX)*((y[i] - meanY)/stdY))
+	
+	pTotal = 0.0
+	for item in p:
+		pTotal+=item
+	pearsonCorrelation = pTotal/len(p)
+	return pearsonCorrelation
+
+def getRanks(x):
+	# map each x to a rank
+	xDict = {}
+	xSorted = sorted(x)
+	
+	for i, val in enumerate(xSorted):
+		if val in xDict:
+			valList = xDict[val]
+			valList.append(i)
+		else:
+			xDict[val] = [i]
+	
+	# normalize by rank
+	xRanked = []
+	for key in xDict:
+		valList = xDict[key]
+		valMean = 0.0
+		for item in valList:
+			valMean += item
+		xDict[key] = valMean/len(valList)
+		
+	for val in x:
+		xRanked.append(xDict[val])
+	return xRanked
+	
+def spearmanCorrealtion(x, y):
+	xRanked = getRanks(x)
+	yRanked = getRanks(y)
+	return pearsonCorrelation(xRanked, yRanked)
+	
 class Analyze:
 	def openFile(self, f):
 		f = open(f,'r')
@@ -383,14 +431,32 @@ class Analyze:
 		
 		pylab.ylabel('Probability')
 		pylab.savefig('subredditDivided.png')
-		
+	
+	def rankVsScore(self, f='rankVsScore_repeatPid.res'):
+		data = self.openFile(f)
+		x = []
+		y = []
+		for key in data:
+			for value in data[key]:
+				x.append(key)
+				y.append(value)
+		# scatter plot it
+		plot(x, y, 'r.')
+		#pylab.ylim([0,2000])
+		pylab.savefig('scoreVsRank.png')
+		# run some correlations...
+		print "pearson correlation", pearsonCorrelation(x, y)
+		print "spearman correlation", spearmanCorrealtion(x, y)
+	
 def main(name):
 	analyze = Analyze()
+	analyze.rankVsScore()
+	analyze.rankVsScore('rankVsScore.res')
 	#analyze.lengthOfStay()
 	#analyze.timeToReachFront()
 	#analyze.postTime('peakScore_25.res', 'peakScore_200.res')
 	#analyze.postTimeAutoCorrelation()
-	analyze.peakRank('peakScore_25.res', 'peakScore_200.res')
+	#analyze.peakRank('peakScore_25.res', 'peakScore_200.res')
 	#analyze.score()
 	#analyze.score('upvotes_25.res', 'upvotes_200.res', 'Upvotes')
 	#analyze.score('downvotes_25.res', 'downvotes_200.res', 'Downvotes')

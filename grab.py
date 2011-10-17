@@ -187,9 +187,27 @@ class Grab:
 		self.writeRes(f, rankDict)
 		return rankDict
 	
+	def scoreVsTime(self, f, rank):
+		resDict = {}
+		fields = (rank)
+		sql = """SELECT score, scraped FROM Reddit.reddit WHERE rank=%s ORDER BY scraped ASC"""%fields
+		res = self.dbHelper.customQuery(sql)
+		scores = []
+		scrapes = []
+		for item in res:
+			scores.append(item[0])
+			scrapes.append(item[1])
+		resDict['scores'] = scores
+		resDict['scrapes'] = scrapes
+		self.writeRes(f, resDict)
+		return resDict
+	
 def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	grab = Grab(port, user, pw, db)
-	print grab.rankVsScore('rankVsScore.res')
+	#print grab.rankVsScore('rankVsScore.res')
+	print grab.scoreVsTime('scoreVsTime_1.res', 1)
+	print grab.scoreVsTime('scoreVsTime_26.res', 26)
+	print grab.scoreVsTime('scoreVsTime_51.res', 51)
 	'''
 	#print grab.lengthOfStay()
 	#print grab.timeToReachFront()
