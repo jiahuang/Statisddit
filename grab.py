@@ -174,8 +174,23 @@ class Grab:
 		self.writeRes(f, subredditDict)
 		return subredditDict
 	
+	def rankVsScore(self, f):
+		rankDict = {}
+		for rank in range(1, 201):
+			fields = (rank)
+			sql = """SELECT score FROM Reddit.reddit WHERE rank=%s"""%fields
+			res = self.dbHelper.customQuery(sql)
+			scoreList = []
+			for r in res:
+				scoreList.append(r[0])
+			rankDict[rank] = scoreList
+		self.writeRes(f, rankDict)
+		return rankDict
+	
 def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	grab = Grab(port, user, pw, db)
+	print grab.rankVsScore('rankVsScore.res')
+	'''
 	#print grab.lengthOfStay()
 	#print grab.timeToReachFront()
 	#print grab.postTime(25, False)
@@ -186,9 +201,10 @@ def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	#print grab.score(posts, 'score_change_25.res', False, False)
 	#print grab.score(posts, 'upvotes_25.res', False, False, True)
 	#print grab.score(posts, 'downvotes_25.res', False, False, False, True)
-	print grab.peak(posts, 'peakScore_25.res', 'score')
+	#print grab.peak(posts, 'peakScore_25.res', 'score')
 	#print grab.score(posts, 'score_25.res')
 	#print grab.subreddit(posts, 'subreddit_25.res')
+	
 	pids = ",".join(["'"+post[0]+"'" for post in posts])
 	sql = "SELECT pid,created, subreddit FROM Reddit.reddit WHERE rank>"+str(25)+" AND pid NOT IN ("+pids+") GROUP BY pid"
 	posts = grab.dbHelper.customQuery(sql)
@@ -198,11 +214,12 @@ def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	#print grab.score(posts, 'upvotes_200.res', False, False, True)
 	#print grab.score(posts, 'downvotes_200.res', False, False, False, True)
 	#print grab.score(posts, 'score_200.res')
-	print grab.peak(posts, 'peakScore_25.res', 'score')
+	#print grab.peak(posts, 'peakScore_25.res', 'score')
 	#print grab.subreddit(posts, 'subreddit_200.res')
 	
 	#posts = grab.dbHelper.getRankInclusive(200)
 	#print grab.score(posts, 'changed_all.res', True)
+	'''
 	
 	
 if __name__ == '__main__':
