@@ -63,6 +63,9 @@ def spearmanCorrealtion(x, y):
 	return pearsonCorrelation(xRanked, yRanked)
 	
 class Analyze:
+	fontP = FontProperties()
+	fontP.set_size('small')
+	
 	def openFile(self, f):
 		f = open(f,'r')
 		return eval(f.read())
@@ -408,8 +411,7 @@ class Analyze:
 		ax.set_xticks(fakeX)
 		ax.set_xticklabels(xs1, rotation=20)
  
-		fontP = FontProperties()
-		fontP.set_size('small')
+		
 		#pylab.xlim([0,24])
 		pylab.ylabel('Number of Posts')
 		pylab.xlabel('Subreddit')
@@ -441,17 +443,36 @@ class Analyze:
 				x.append(key)
 				y.append(value)
 		# scatter plot it
-		plot(x, y, 'r.')
-		#pylab.ylim([0,2000])
+		plot(x, y, 'r.', markersize=0.1,linewidth=None,markerfacecolor='black')
+		pylab.ylim([0,2000])
+		pylab.ylabel('Score')
+		pylab.xlabel('Rank')
 		pylab.savefig('scoreVsRank.png')
+		
 		# run some correlations...
 		print "pearson correlation", pearsonCorrelation(x, y)
 		print "spearman correlation", spearmanCorrealtion(x, y)
 	
+	def scoreVsTime(self, f='scoreVsTime.res'):
+		data = self.openFile(f)
+		x = data['scrapes']
+		y = data['scores']
+		# change scrapes to time of day
+		xCleaned = []
+		for time in x:
+			xCleaned.append(time.hour)
+		plot(xCleaned, y, 'r.')
+		pylab.ylabel('Score')
+		pylab.xlabel('Hour of the day')
+		pylab.savefig('scoreVsTime.png')
+		print "pearson correlation", pearsonCorrelation(xCleaned, y)
+		print "spearman correlation", spearmanCorrealtion(xCleaned, y)
+	
 def main(name):
 	analyze = Analyze()
-	analyze.rankVsScore()
-	analyze.rankVsScore('rankVsScore.res')
+	#analyze.scoreVsTime('scoreVsTime_1.res')
+	analyze.scoreVsTime('scoreVsTime_26.res')
+	#analyze.rankVsScore()
 	#analyze.lengthOfStay()
 	#analyze.timeToReachFront()
 	#analyze.postTime('peakScore_25.res', 'peakScore_200.res')

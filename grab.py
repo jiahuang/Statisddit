@@ -174,6 +174,16 @@ class Grab:
 		self.writeRes(f, subredditDict)
 		return subredditDict
 	
+	def bayesianSubreddit(self, fields, hour):
+		sql = """SELECT pid, created FROM Reddit.reddit WHERE rank <=%s AND subreddit='%s' GROUP BY pid ORDER BY created;"""%fields
+		res = self.dbHelper.customQuery(sql)
+		number = 0
+		for item in res:
+			createdDate = datetime.datetime.utcfromtimestamp(float(item[1]))
+			if createdDate.hour == hour:
+				number += 1
+		return number
+	
 	def rankVsScore(self, f):
 		rankDict = {}
 		for rank in range(1, 201):
@@ -205,10 +215,11 @@ class Grab:
 def main(name, port=3306, user='root', pw='admin', db='Reddit'):
 	grab = Grab(port, user, pw, db)
 	#print grab.rankVsScore('rankVsScore.res')
+	print "reddit.com top 25", grab.bayesianSubreddit((25, 'reddit.com'), 11)
+	'''
 	print grab.scoreVsTime('scoreVsTime_1.res', 1)
 	print grab.scoreVsTime('scoreVsTime_26.res', 26)
 	print grab.scoreVsTime('scoreVsTime_51.res', 51)
-	'''
 	#print grab.lengthOfStay()
 	#print grab.timeToReachFront()
 	#print grab.postTime(25, False)
