@@ -63,9 +63,6 @@ def spearmanCorrealtion(x, y):
 	return pearsonCorrelation(xRanked, yRanked)
 	
 class Analyze:
-	fontP = FontProperties()
-	fontP.set_size('small')
-	
 	def openFile(self, f):
 		f = open(f,'r')
 		return eval(f.read())
@@ -468,10 +465,28 @@ class Analyze:
 		print "pearson correlation", pearsonCorrelation(xCleaned, y)
 		print "spearman correlation", spearmanCorrealtion(xCleaned, y)
 	
+	def bayesianSubreddit(self):
+		fontP = FontProperties()
+		fontP.set_size('small')
+	
+		dataReddit = self.openFile('reddit.com_bayesian.res')
+		dataFunny = self.openFile('funny_bayesian.res')
+		dataPics = self.openFile('pics_bayesian.res')
+		
+		p1 = plot(dataReddit.keys(), dataReddit.values(), 'k')
+		p2 = plot(dataFunny.keys(), dataFunny.values(), 'r')
+		p3 = plot(dataPics.keys(), dataPics.values(), 'b')
+		pylab.ylabel('Probability of Reaching the Front Page')
+		pylab.xlabel('Hour of the day')
+		pylab.legend((p1[0], p2[0], p3[0]), ('r/reddit', 'r/funny', 'r/pics'), prop = fontP)
+		pylab.savefig('bayesianSubreddit.png')
+		
+			
 def main(name):
 	analyze = Analyze()
+	analyze.bayesianSubreddit()
 	#analyze.scoreVsTime('scoreVsTime_1.res')
-	analyze.scoreVsTime('scoreVsTime_26.res')
+	#analyze.scoreVsTime('scoreVsTime_26.res')
 	#analyze.rankVsScore()
 	#analyze.lengthOfStay()
 	#analyze.timeToReachFront()

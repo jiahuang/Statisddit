@@ -229,48 +229,57 @@ class Grab:
 		resDict['scrapes'] = scrapes
 		self.writeRes(f, resDict)
 		return resDict
-	
-def main(name, port=3306, user='root', pw='admin', db='Reddit'):
-	grab = Grab(port, user, pw, db)
-	#print grab.rankVsScore('rankVsScore.res')
+
+	def compareComments(self, posts, f):
+		'''get lowest rank of each post, check num of comments'''
+		commentsDict = {}
+		for post in posts:
+			fields = (post[0])
+			sql = """SELECT num_comments, rank FROM Reddit.reddit WHERE pid='%s' ORDER BY rank DESC LIMIT 1;"""%fields
+			res = self.dbHelper.customQuery(sql)
+			print "grabbing post", post[0], res[0][0], res[0][1]
+			if res[0][1] not in commentsDict:
+				commentsDict[res[0][1]] = [res[0][0]] 
+			else:
+				temp =  commentsDict[res[0][1]]
+				temp.append(res[0][0])
+				commentsDict[res[0][1]] = temp
+		self.writeRes(f, commentsDict)
+		return commentsDict
+
+def functions(grab):
+	print grab.rankVsScore('rankVsScore.res')
 	print grab.bayesianSubreddit('reddit.com')
 	print grab.bayesianSubreddit('pics')
 	print grab.bayesianSubreddit('funny')
-	
-	'''
 	print grab.scoreVsTime('scoreVsTime_1.res', 1)
 	print grab.scoreVsTime('scoreVsTime_26.res', 26)
 	print grab.scoreVsTime('scoreVsTime_51.res', 51)
-	#print grab.lengthOfStay()
-	#print grab.timeToReachFront()
-	#print grab.postTime(25, False)
-	#print grab.repost()
+	print grab.lengthOfStay()
+	print grab.timeToReachFront()
+	print grab.postTime(25, False)
+	print grab.repost()
+	# require precomputed posts
+	print grab.postTime(posts, 'post_time_25.res')
+	print grab.score(posts, 'score_total_25.res')
+	print grab.score(posts, 'score_change_25.res', False, False)
+	print grab.score(posts, 'upvotes_25.res', False, False, True)
+	print grab.score(posts, 'downvotes_25.res', False, False, False, True)
+	print grab.peak(posts, 'peakScore_25.res', 'score')
+	print grab.score(posts, 'score_25.res')
+	print grab.subreddit(posts, 'subreddit_25.res')
+	print grab.score(posts, 'changed_all.res', True)
+	
+def main(name, port=3306, user='root', pw='admin', db='Reddit'):
+	grab = Grab(port, user, pw, db)
+	
 	posts = grab.dbHelper.getRankInclusive(25)
-	#print grab.postTime(posts, 'post_time_25.res')
-	#print grab.score(posts, 'score_total_25.res')
-	#print grab.score(posts, 'score_change_25.res', False, False)
-	#print grab.score(posts, 'upvotes_25.res', False, False, True)
-	#print grab.score(posts, 'downvotes_25.res', False, False, False, True)
-	#print grab.peak(posts, 'peakScore_25.res', 'score')
-	#print grab.score(posts, 'score_25.res')
-	#print grab.subreddit(posts, 'subreddit_25.res')
+	print grab.compareComments(posts, 'comments_25.res')
 	
 	pids = ",".join(["'"+post[0]+"'" for post in posts])
 	sql = "SELECT pid,created, subreddit FROM Reddit.reddit WHERE rank>"+str(25)+" AND pid NOT IN ("+pids+") GROUP BY pid"
 	posts = grab.dbHelper.customQuery(sql)
-	#print grab.postTime(posts, 'post_time_200.res')
-	#print grab.score(posts, 'score_total_200.res')
-	#print grab.score(posts, 'score_change_200.res', False, False)
-	#print grab.score(posts, 'upvotes_200.res', False, False, True)
-	#print grab.score(posts, 'downvotes_200.res', False, False, False, True)
-	#print grab.score(posts, 'score_200.res')
-	#print grab.peak(posts, 'peakScore_25.res', 'score')
-	#print grab.subreddit(posts, 'subreddit_200.res')
-	
-	#posts = grab.dbHelper.getRankInclusive(200)
-	#print grab.score(posts, 'changed_all.res', True)
-	'''
-	
+	print grab.compareComments(posts, 'comments_200.res')
 	
 if __name__ == '__main__':
     main(*sys.argv)
